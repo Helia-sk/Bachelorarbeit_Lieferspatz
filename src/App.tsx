@@ -8,6 +8,7 @@ import CustomerLogin from './pages/CustomerLogin';
 import RestaurantDashboard from './pages/RestaurantDashboard';
 import CustomerDashboard from './pages/CustomerDashboard';
 
+
 function App() {
   return (
     <CartProvider>
@@ -23,6 +24,7 @@ function App() {
               <Route path="/customer/dashboard/*" element={<CustomerDashboard />} />
             </Routes>
           </main>
+  
         </div>
       </Router>
     </CartProvider>

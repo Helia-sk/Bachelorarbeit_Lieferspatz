@@ -26,6 +26,8 @@ from Res_Profile import profile_bp
 from Res_balance import balance_bp
 from Res_orders import orders_bp
 from menu import menu_bp
+#Logging blueprint
+from logging_blueprint import logging_bp
 
 
 sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
@@ -46,15 +48,12 @@ def create_app():
     init_session(app, db)
 
     # 4. Configure CORS to allow credentials and specify the correct origin
-    CORS(app, supports_credentials=True, origins=[
-        "http://localhost:3000",
-        "http://127.0.0.1:3000",
-        "http://127.0.0.1:5050",
-        "http://localhost:5050",
-        "http://localhost:5173",
-        "localhost:5173",
-        "http://127.0.0.1:5173"
-    ])
+    CORS(app, 
+          supports_credentials=True, 
+          origins=["*"],  # Allow all origins for development
+          methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+          allow_headers=["Content-Type", "Authorization", "X-Requested-With"]
+    )
 
     # 5. Initialize WebSockets
     socketio.init_app(app)
@@ -79,7 +78,8 @@ def create_app():
     app.register_blueprint(restaurant_details_bp)  
     app.register_blueprint(customer_place_order_bp)
     app.register_blueprint(cus_balance_bp)
-    app.register_blueprint(cus_orders_bp) 
+    app.register_blueprint(cus_orders_bp)
+    app.register_blueprint(logging_bp) 
 
     # 8. Add WebSocket event handlers
     @socketio.on('connect')
@@ -89,6 +89,17 @@ def create_app():
     @socketio.on('disconnect')
     def handle_disconnect():
         logging.info("A client disconnected from WebSocket")
+    
+    # Logging WebSocket events
+    @socketio.on('new_log')
+    def handle_new_log(data):
+        logging.info(f"New log received via WebSocket: {data}")
+        socketio.emit('new_log', data, to=None)
+    
+    @socketio.on('logs_reset')
+    def handle_logs_reset():
+        logging.info("Logs reset requested via WebSocket")
+        socketio.emit('logs_reset', {'message': 'All logs have been reset'}, to=None)
 
     # 9. Utility route to list all available routes
     @app.route('/routes', methods=['GET'])
@@ -101,12 +112,90 @@ def create_app():
     def log_request_info():
         logging.info(f"Received {request.method} request to {request.url}")
         logging.info(f"Headers: {dict(request.headers)}")
-        if request.method in ["POST", "PUT", "PATCH"]:
-            logging.info(f"Body: {request.get_json()}")
+        
+        # Skip logging body for export requests to avoid logging large amounts of data
+        if request.method in ["POST", "PUT", "PATCH"] and "/export" not in request.url:
+            try:
+                body = request.get_json() if request.content_type == 'application/json' else request.get_data()
+                logging.info(f"Body: {body}")
+            except Exception as e:
+                logging.info(f"Body: Could not parse - {e}")
+                logging.info(f"Raw data: {request.get_data()}")
+        elif "/export" in request.url:
+            logging.info("Body: Skipped logging for export request (large data)")
+        
+        # Log backend activity to the logging system
+        try:
+            from logging_blueprint import save_backend_log_to_db
+            import uuid
+            from datetime import datetime
+            
+            backend_log = {
+                'id': str(uuid.uuid4()),
+                'timestamp': datetime.now().isoformat(),
+                'event': 'http_request',
+                'schema': 'http_request.v1',
+                'session_id': 'backend',
+                'attempt_id': str(uuid.uuid4()),
+                'browser_id': 'backend',
+                'route': request.path,
+                'details': {
+                    'method': request.method,
+                    'url': request.url,
+                    'endpoint': request.endpoint,
+                    'status_code': None,  # Will be set in after_request
+                    'user_agent': request.headers.get('User-Agent', 'Unknown'),
+                    'ip_address': request.remote_addr,
+                    'content_type': request.content_type,
+                    'content_length': request.content_length
+                }
+            }
+            
+            # Save to database
+            save_backend_log_to_db(backend_log)
+            
+        except Exception as e:
+            logging.error(f"Failed to log backend activity: {e}")
+    
+    # 11. Log response status codes
+    @app.after_request
+    def log_response_info(response):
+        try:
+            from logging_blueprint import save_backend_log_to_db
+            import uuid
+            from datetime import datetime
+            
+            # Log response status
+            backend_log = {
+                'id': str(uuid.uuid4()),
+                'timestamp': datetime.now().isoformat(),
+                'event': 'http_response',
+                'schema': 'http_response.v1',
+                'session_id': 'backend',
+                'attempt_id': str(uuid.uuid4()),
+                'browser_id': 'backend',
+                'route': request.path,
+                'details': {
+                    'method': request.method,
+                    'url': request.url,
+                    'endpoint': request.endpoint,
+                    'status_code': response.status_code,
+                    'response_size': len(response.get_data()),
+                    'content_type': response.content_type,
+                    'processing_time': None  # Could be enhanced with timing
+                }
+            }
+            
+            # Save to database
+            save_backend_log_to_db(backend_log)
+            
+        except Exception as e:
+            logging.error(f"Failed to log response info: {e}")
+        
+        return response
 
     return app, socketio
 
 if __name__ == "__main__":
     app, socketio = create_app()
-    print("Starting Flask server...")
     socketio.run(app, debug=True, host='localhost', port=5050)

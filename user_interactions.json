@@ -1,0 +1,22 @@
+[
+  {
+    "id": "log_1756042540327_rldr3guzn",
+    "timestamp": "2025-08-24T13:35:40.327Z",
+    "sessionId": "session_1756042540327_ymuowphqm",
+    "action": "page_view",
+    "component": "navigation",
+    "details": {
+      "pathname": "/customer/login",
+      "search": "",
+      "hash": "",
+      "referrer": "http://localhost:5174/customer/login"
+    },
+    "url": "http://localhost:5174/customer/login",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36",
+    "viewport": {
+      "width": 1372,
+      "height": 911
+    },
+    "received_at": "2025-08-24T15:37:05.889157"
+  }
+]
