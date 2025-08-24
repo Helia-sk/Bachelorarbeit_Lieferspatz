@@ -9,8 +9,8 @@ export const initDB = async () => {
   
   try {
     const SQL = await initSqlJs({
-      // Use CDN for SQL.js WASM file
-      locateFile: file => `https://sql.js.org/dist/${file}`
+      // Use local WASM file that matches the installed sql.js version
+      locateFile: file => `/node_modules/sql.js/dist/${file}`
     });
     
     db = new SQL.Database();
