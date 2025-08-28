@@ -411,3 +411,29 @@ thumb
 sketch
 
 # End of https://www.toptal.com/developers/gitignore/api/flask,react,node,python
+
+### Database Files ###
+# SQLite databases
+*.db
+*.sqlite
+*.sqlite3
+database.db
+user_logs.db
+
+### User Interaction Logs ###
+# Frontend and backend log files
+user_interactions.json
+user_interactions_export_*.json
+user_logs.db
+
+### Logging System Files ###
+# Backend logging system files
+Backend/user_logs.db
+Backend/user_interactions.json
+Backend/user_interactions_export_*.json
+
+### Environment and Config Files ###
+# Local environment files
+.env.local
+.env.development
+.env.production

@@ -101,6 +101,37 @@ def create_app():
         logging.info("Logs reset requested via WebSocket")
         socketio.emit('logs_reset', {'message': 'All logs have been reset'}, to=None)
 
+    # Helper function to determine if an endpoint is a business API
+    def is_business_endpoint(path: str) -> bool:
+        """Check if a given URL path corresponds to a business API endpoint."""
+        business_endpoints = [
+            '/api/customer/',
+            '/api/restaurant/',
+            '/api/orders/',
+            '/api/menu/',
+            '/api/auth/',
+            '/api/balance/',
+            '/api/delivery/',
+            '/api/profile/',
+            '/api/settings/',
+            '/api/nearby/',
+            '/api/restaurant-details/',
+            '/api/place-order/',
+            '/api/balance/',
+            '/api/orders/',
+            '/api/menu/',
+            '/api/logout',
+            '/api/register',
+            '/api/login'
+        ]
+        
+        # Explicitly exclude logging system endpoints
+        if path.startswith('/api/logs') or path.startswith('/health') or path.startswith('/metrics'):
+            return False
+            
+        # Check if path matches any business endpoint
+        return any(path.startswith(endpoint) for endpoint in business_endpoints)
+
     # 9. Utility route to list all available routes
     @app.route('/routes', methods=['GET'])
     def list_routes():
@@ -110,6 +141,9 @@ def create_app():
     # 10. Log all incoming requests for debugging
     @app.before_request
     def log_request_info():
+        # Skip logging for logging system endpoints to prevent infinite loops
+        if request.path.startswith('/api/logs'):
+            return
         logging.info(f"Received {request.method} request to {request.url}")
         logging.info(f"Headers: {dict(request.headers)}")
         
@@ -124,73 +158,80 @@ def create_app():
         elif "/export" in request.url:
             logging.info("Body: Skipped logging for export request (large data)")
         
-        # Log backend activity to the logging system
-        try:
-            from logging_blueprint import save_backend_log_to_db
-            import uuid
-            from datetime import datetime
-            
-            backend_log = {
-                'id': str(uuid.uuid4()),
-                'timestamp': datetime.now().isoformat(),
-                'event': 'http_request',
-                'schema': 'http_request.v1',
-                'session_id': 'backend',
-                'attempt_id': str(uuid.uuid4()),
-                'browser_id': 'backend',
-                'route': request.path,
-                'details': {
-                    'method': request.method,
-                    'url': request.url,
-                    'endpoint': request.endpoint,
-                    'status_code': None,  # Will be set in after_request
-                    'user_agent': request.headers.get('User-Agent', 'Unknown'),
-                    'ip_address': request.remote_addr,
-                    'content_type': request.content_type,
-                    'content_length': request.content_length
+        # Only log backend activity for business API endpoints
+        if is_business_endpoint(request.path):
+            try:
+                from logging_blueprint import save_backend_log_to_db
+                import uuid
+                from datetime import datetime
+                
+                backend_log = {
+                    'id': str(uuid.uuid4()),
+                    'timestamp': datetime.now().isoformat(),
+                    'event': 'http_request',
+                    'schema': 'http_request.v1',
+                    'session_id': 'backend',
+                    'attempt_id': str(uuid.uuid4()),
+                    'browser_id': 'backend',
+                    'route': request.path,
+                    'details': {
+                        'method': request.method,
+                        'url': request.url,
+                        'endpoint': request.endpoint,
+                        'status_code': None,  # Will be set in after_request
+                        'user_agent': request.headers.get('User-Agent', 'Unknown'),
+                        'ip_address': request.remote_addr,
+                        'content_type': request.content_type,
+                        'content_length': request.content_length
+                    }
                 }
-            }
-            
-            # Save to database
-            save_backend_log_to_db(backend_log)
-            
-        except Exception as e:
-            logging.error(f"Failed to log backend activity: {e}")
+                
+                # Save to database
+                save_backend_log_to_db(backend_log)
+                
+            except Exception as e:
+                logging.error(f"Failed to log backend activity: {e}")
     
     # 11. Log response status codes
     @app.after_request
     def log_response_info(response):
-        try:
-            from logging_blueprint import save_backend_log_to_db
-            import uuid
-            from datetime import datetime
+        # Skip logging for logging system endpoints to prevent infinite loops
+        if request.path.startswith('/api/logs'):
+            return response
             
-            # Log response status
-            backend_log = {
-                'id': str(uuid.uuid4()),
-                'timestamp': datetime.now().isoformat(),
-                'event': 'http_response',
-                'schema': 'http_response.v1',
-                'session_id': 'backend',
-                'attempt_id': str(uuid.uuid4()),
-                'browser_id': 'backend',
-                'route': request.path,
-                'details': {
-                    'method': request.method,
-                    'url': request.url,
-                    'endpoint': request.endpoint,
-                    'status_code': response.status_code,
-                    'response_size': len(response.get_data()),
-                    'content_type': response.content_type,
-                    'processing_time': None  # Could be enhanced with timing
+        # Only log backend activity for business API endpoints
+        if is_business_endpoint(request.path):
+            try:
+                from logging_blueprint import save_backend_log_to_db
+                import uuid
+                from datetime import datetime
+                
+                # Log response status
+                backend_log = {
+                    'id': str(uuid.uuid4()),
+                    'timestamp': datetime.now().isoformat(),
+                    'event': 'http_response',
+                    'schema': 'http_response.v1',
+                    'session_id': 'backend',
+                    'attempt_id': str(uuid.uuid4()),
+                    'browser_id': 'backend',
+                    'route': request.path,
+                    'details': {
+                        'method': request.method,
+                        'url': request.url,
+                        'endpoint': request.endpoint,
+                        'status_code': response.status_code,
+                        'response_size': len(response.get_data()),
+                        'content_type': response.content_type,
+                        'processing_time': None  # Could be enhanced with timing
+                    }
                 }
-            }
-            
-            # Save to database
-            save_backend_log_to_db(backend_log)
-            
-        except Exception as e:
-            logging.error(f"Failed to log response info: {e}")
+                
+                # Save to database
+                save_backend_log_to_db(backend_log)
+                
+            except Exception as e:
+                logging.error(f"Failed to log response info: {e}")
         
         return response
 

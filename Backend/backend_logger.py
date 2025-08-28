@@ -13,7 +13,9 @@ import logging
 
 # Configuration
 LOGGING_API_URL = "http://localhost:5050/api/logs/backend"
-ENABLE_LOGGING = True
+# DISABLED: This creates infinite loops when backend tries to log to logging API
+# The backend logging is now handled directly in FLASK_APP.py via before_request/after_request hooks
+ENABLE_LOGGING = False
 
 def log_backend_action(
     action: str,

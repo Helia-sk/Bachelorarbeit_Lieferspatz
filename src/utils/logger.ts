@@ -22,6 +22,27 @@ interface UserInteraction {
     width: number;
     height: number;
   };
+  // Input change specific fields
+  inputName?: string;
+  inputType?: string;
+  inputValue?: string;
+  inputId?: string;
+  finalValueLength?: number;
+  // System noise detection
+  system_noise?: boolean;
+  noise_reason?: string;
+  // Additional properties for LogViewer compatibility
+  type?: string;
+  source?: string;
+  data?: any;
+  action?: string;
+  component?: string;
+  sessionId?: string; // Alias for session_id for LogViewer compatibility
+  // Additional properties for LogViewer display
+  id?: string;
+  userId?: string;
+  details?: any;
+  timestamp?: string;
 }
 
 class UserInteractionLogger {
@@ -32,6 +53,15 @@ class UserInteractionLogger {
   private logQueue: UserInteraction[] = [];
   private flushInterval: number = 5000; // 5 seconds
   private flushTimer?: NodeJS.Timeout;
+  
+  // Debounced input logging
+  private inputChangeTimers: Map<string, NodeJS.Timeout> = new Map();
+  private inputChangeValues: Map<string, { value: string; fieldName: string }> = new Map();
+  
+  // System noise configuration
+  private logSystemNoise: boolean = true;  // Whether to log system noise at all
+  private filterSystemNoise: boolean = true; // Whether to filter from user journey view
+  private strictBusinessAPIFiltering: boolean = true; // Only log business API calls
 
   constructor() {
     console.log('🚀 UserInteractionLogger initializing...');
@@ -40,6 +70,87 @@ class UserInteractionLogger {
     this.startAutoFlush();
     this.setupGlobalListeners();
     console.log('✅ UserInteractionLogger initialized successfully');
+  }
+
+  /**
+   * Debounced input change logging - only logs after user stops typing
+   */
+  private debouncedInputChange(target: HTMLInputElement): void {
+    const fieldKey = `${target.id || target.name || target.tagName}_${target.type}`;
+    
+    // Clear existing timer for this field
+    if (this.inputChangeTimers.has(fieldKey)) {
+      clearTimeout(this.inputChangeTimers.get(fieldKey)!);
+    }
+    
+    // Store the current value and field name
+    this.inputChangeValues.set(fieldKey, {
+      value: target.value,
+      fieldName: target.name || target.id || target.tagName
+    });
+    
+    // Set new timer (500ms delay)
+    const timer = setTimeout(() => {
+      this.logDebouncedInputChange(fieldKey);
+    }, 500);
+    
+    this.inputChangeTimers.set(fieldKey, timer);
+  }
+
+  /**
+   * Log input change when debounce timer expires
+   */
+  private logDebouncedInputChange(fieldKey: string): void {
+    const inputData = this.inputChangeValues.get(fieldKey);
+    if (!inputData) return;
+    
+    // Get the target element to get additional context
+    const target = document.querySelector(`[name="${inputData.fieldName}"], [id="${inputData.fieldName}"]`) as HTMLInputElement;
+    if (!target) return;
+    
+    this.logInteraction('input_change', {
+      trigger: 'debounced_input',
+      inputName: inputData.fieldName,
+      inputType: target.type,
+      inputValue: target.type === 'password' ? '[HIDDEN]' : inputData.value.substring(0, 100),
+      inputId: target.id,
+      finalValueLength: inputData.value.length,
+      schema: 'input_change.v1'
+    });
+    
+    // Clean up
+    this.inputChangeValues.delete(fieldKey);
+    this.inputChangeTimers.delete(fieldKey);
+  }
+
+  /**
+   * Log input change immediately when user leaves the field (blur)
+   */
+  private logInputChangeOnBlur(target: HTMLInputElement): void {
+    const fieldKey = `${target.id || target.name || target.tagName}_${target.type}`;
+    
+    // Clear any pending debounced timer
+    if (this.inputChangeTimers.has(fieldKey)) {
+      clearTimeout(this.inputChangeTimers.get(fieldKey)!);
+      this.inputChangeTimers.delete(fieldKey);
+    }
+    
+    // Get stored value or use current value
+    const storedData = this.inputChangeValues.get(fieldKey);
+    const finalValue = storedData?.value || target.value;
+    
+    this.logInteraction('input_change', {
+      trigger: 'blur',
+      inputName: target.name || target.id || target.tagName,
+      inputType: target.type,
+      inputValue: target.type === 'password' ? '[HIDDEN]' : finalValue.substring(0, 100),
+      inputId: target.id,
+      finalValueLength: finalValue.length,
+      schema: 'input_change.v1'
+    });
+    
+    // Clean up
+    this.inputChangeValues.delete(fieldKey);
   }
 
   private generateSessionId(): string {
@@ -88,20 +199,21 @@ class UserInteractionLogger {
       });
     });
 
-    // Capture input changes
+    // Capture input changes with debouncing
     document.addEventListener('input', (e) => {
       const target = e.target as HTMLInputElement;
       if (target && ['input', 'textarea', 'select'].includes(target.tagName.toLowerCase())) {
-        this.logInteraction('input_change', {
-          trigger: 'input',
-          inputName: target.name,
-          inputType: target.type,
-          inputValue: target.type === 'password' ? '[HIDDEN]' : target.value.substring(0, 100),
-          inputId: target.id,
-          schema: 'input_change.v1'
-        });
+        this.debouncedInputChange(target);
       }
     });
+
+    // Capture input blur events for immediate logging
+    document.addEventListener('blur', (e) => {
+      const target = e.target as HTMLInputElement;
+      if (target && ['input', 'textarea', 'select'].includes(target.tagName.toLowerCase())) {
+        this.logInputChangeOnBlur(target);
+      }
+    }, true);
 
     // Capture scroll events (throttled)
     let scrollTimeout: NodeJS.Timeout;
@@ -150,6 +262,19 @@ class UserInteractionLogger {
   public logInteraction(event: string, details: Record<string, any> = {}): void {
     if (!this.isEnabled) return;
 
+    // Check if this is system noise using enhanced detection
+    const noiseCheck = this.isSystemNoiseEnhanced(event, details);
+    
+    // If it's system noise and we're configured to skip it, return early
+    if (noiseCheck.isNoise && !this.logSystemNoise) {
+      return;
+    }
+    
+    // If it's system noise, we can either:
+    // 1. Skip logging entirely (uncomment next line)
+    // if (noiseCheck.isNoise) return;
+    
+    // 2. Log but flag as system noise (current approach)
     const interaction = {
       id: `log_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       timestamp: new Date().toISOString(),
@@ -176,7 +301,26 @@ class UserInteractionLogger {
       viewport: {
         width: window.innerWidth,
         height: window.innerHeight
-      }
+      },
+      // Input change specific fields
+      inputName: details.inputName,
+      inputType: details.inputType,
+      inputValue: details.inputValue,
+      inputId: details.inputId,
+      finalValueLength: details.finalValueLength,
+      // System noise detection
+      system_noise: noiseCheck.isNoise,
+      noise_reason: noiseCheck.reason,
+      // Additional properties for LogViewer compatibility
+      type: event,
+      source: 'frontend',
+      data: details,
+      action: event,
+      component: details.component || 'unknown',
+      sessionId: this.sessionId, // Alias for session_id
+      // Additional properties for LogViewer display
+      userId: this.userId,
+      details: details
     };
 
     console.log('📝 Logging interaction:', { event, details });
@@ -194,6 +338,167 @@ class UserInteractionLogger {
     this.userId = userId;
   }
 
+  /**
+   * Clean up timers and stored values to prevent memory leaks
+   */
+  public cleanup(): void {
+    // Clear all pending input change timers
+    this.inputChangeTimers.forEach(timer => clearTimeout(timer));
+    this.inputChangeTimers.clear();
+    this.inputChangeValues.clear();
+    
+    // Clear flush timer
+    if (this.flushTimer) {
+      clearTimeout(this.flushTimer);
+    }
+  }
+
+  /**
+   * Detect if an interaction is system noise (not user intent)
+   */
+  private isSystemNoise(event: string, details: Record<string, any>): { isNoise: boolean; reason?: string } {
+    // CORS preflight OPTIONS requests
+    if (event === 'http_request' && details.method === 'OPTIONS') {
+      return { isNoise: true, reason: 'cors_preflight' };
+    }
+
+    // 308 redirects
+    if (event === 'navigation' && details.statusCode === 308) {
+      return { isNoise: true, reason: 'permanent_redirect' };
+    }
+
+    // 301 redirects (also system noise)
+    if (event === 'navigation' && details.statusCode === 301) {
+      return { isNoise: true, reason: 'moved_permanently' };
+    }
+
+    // 302 redirects (temporary redirects)
+    if (event === 'navigation' && details.statusCode === 302) {
+      return { isNoise: true, reason: 'temporary_redirect' };
+    }
+
+    // Browser-initiated requests (not user intent)
+    if (event === 'http_request' && details.trigger === 'browser') {
+      return { isNoise: true, reason: 'browser_initiated' };
+    }
+
+    // Favicon requests
+    if (event === 'http_request' && details.url?.includes('/favicon')) {
+      return { isNoise: true, reason: 'favicon_request' };
+    }
+
+    // Health check endpoints
+    if (event === 'http_request' && details.url?.includes('/health')) {
+      return { isNoise: true, reason: 'health_check' };
+    }
+
+    // Logging system endpoints (prevent infinite loops)
+    if (event === 'http_request' && details.url?.includes('/api/logs')) {
+      return { isNoise: true, reason: 'logging_endpoint' };
+    }
+
+    // Stats endpoints (logging system)
+    if (event === 'http_request' && details.url?.includes('/api/logs/stats')) {
+      return { isNoise: true, reason: 'logging_stats' };
+    }
+
+    // WebSocket connections (system noise)
+    if (event === 'http_request' && details.url?.includes('/socket.io')) {
+      return { isNoise: true, reason: 'websocket_connection' };
+    }
+
+    // Not system noise
+    return { isNoise: false };
+  }
+
+  /**
+   * Check if an API call is a business endpoint worth logging
+   */
+  private isBusinessAPI(url: string): boolean {
+    // Business API endpoints that represent real user actions
+    const businessEndpoints = [
+      // Customer endpoints
+      '/api/customer/',
+      '/api/customer/login',
+      '/api/customer/register',
+      '/api/customer/orders',
+      '/api/customer/profile',
+      '/api/customer/balance',
+      
+      // Restaurant endpoints
+      '/api/restaurant/',
+      '/api/restaurant/login',
+      '/api/restaurant/register',
+      '/api/restaurant/orders',
+      '/api/restaurant/menu',
+      '/api/restaurant/profile',
+      
+      // Restaurant details
+      '/api/restaurant_details/',
+      '/api/restaurant_details/nearby',
+      
+      // Order management
+      '/api/orders/',
+      '/api/orders/create',
+      '/api/orders/update',
+      '/api/orders/status',
+      
+      // Menu management
+      '/api/menu/',
+      '/api/menu/items',
+      '/api/menu/categories',
+      
+      // Payment endpoints
+      '/api/payment/',
+      '/api/payment/process',
+      '/api/payment/status',
+      
+      // Delivery endpoints
+      '/api/delivery/',
+      '/api/delivery/status',
+      '/api/delivery/track',
+      
+      // User management
+      '/api/user/',
+      '/api/user/profile',
+      '/api/user/settings',
+      
+      // Search and discovery
+      '/api/search/',
+      '/api/search/restaurants',
+      '/api/search/menu',
+      
+      // Reviews and ratings
+      '/api/reviews/',
+      '/api/reviews/submit',
+      '/api/reviews/list'
+    ];
+
+    return businessEndpoints.some(endpoint => url.includes(endpoint));
+  }
+
+  /**
+   * Enhanced system noise detection with business API filtering
+   */
+  private isSystemNoiseEnhanced(event: string, details: Record<string, any>): { isNoise: boolean; reason?: string } {
+    // First check basic system noise
+    const basicNoise = this.isSystemNoise(event, details);
+    if (basicNoise.isNoise) {
+      return basicNoise;
+    }
+
+    // For HTTP requests, check if it's a business API (only if strict filtering is enabled)
+    if (this.strictBusinessAPIFiltering && event === 'http_request' && details.url) {
+      // If it's not a business API, it's likely system noise
+      if (!this.isBusinessAPI(details.url)) {
+        return { isNoise: true, reason: 'non_business_api' };
+      }
+    }
+
+    // Not system noise
+    return { isNoise: false };
+  }
+
   public enable(): void {
     this.isEnabled = true;
   }
@@ -204,6 +509,72 @@ class UserInteractionLogger {
 
   public clearQueue(): void {
     this.logQueue = [];
+  }
+
+  /**
+   * Get logs filtered by system noise preference
+   */
+  public getLogs(includeSystemNoise: boolean = false): UserInteraction[] {
+    if (includeSystemNoise) {
+      return [...this.logQueue];
+    }
+    
+    // Filter out system noise for user journey view
+    return this.logQueue.filter(log => !log.system_noise);
+  }
+
+  /**
+   * Get only user intent logs (no system noise)
+   */
+  public getUserJourneyLogs(): UserInteraction[] {
+    return this.getLogs(false);
+  }
+
+  /**
+   * Get system noise logs for debugging
+   */
+  public getSystemNoiseLogs(): UserInteraction[] {
+    return this.logQueue.filter(log => log.system_noise);
+  }
+
+  /**
+   * Configure system noise handling
+   */
+  public configureSystemNoise(options: {
+    logSystemNoise?: boolean;
+    filterSystemNoise?: boolean;
+    strictBusinessAPIFiltering?: boolean;
+  }): void {
+    if (options.logSystemNoise !== undefined) {
+      this.logSystemNoise = options.logSystemNoise;
+    }
+    if (options.filterSystemNoise !== undefined) {
+      this.filterSystemNoise = options.filterSystemNoise;
+    }
+    if (options.strictBusinessAPIFiltering !== undefined) {
+      this.strictBusinessAPIFiltering = options.strictBusinessAPIFiltering;
+    }
+    
+    console.log('🔧 System noise configuration updated:', {
+      logSystemNoise: this.logSystemNoise,
+      filterSystemNoise: this.filterSystemNoise,
+      strictBusinessAPIFiltering: this.strictBusinessAPIFiltering
+    });
+  }
+
+  /**
+   * Get current system noise configuration
+   */
+  public getSystemNoiseConfig(): {
+    logSystemNoise: boolean;
+    filterSystemNoise: boolean;
+    strictBusinessAPIFiltering: boolean;
+  } {
+    return {
+      logSystemNoise: this.logSystemNoise,
+      filterSystemNoise: this.filterSystemNoise,
+      strictBusinessAPIFiltering: this.strictBusinessAPIFiltering
+    };
   }
 
   private async flushLogs(): Promise<void> {
