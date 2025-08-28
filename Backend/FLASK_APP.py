@@ -162,6 +162,7 @@ def create_app():
         if is_business_endpoint(request.path):
             try:
                 from logging_blueprint import save_backend_log_to_db
+                from csv_logger import csv_logger
                 import uuid
                 from datetime import datetime
                 
@@ -186,8 +187,9 @@ def create_app():
                     }
                 }
                 
-                # Save to database
+                # Dual logging: Save to database AND CSV
                 save_backend_log_to_db(backend_log)
+                csv_logger.log_backend(backend_log)
                 
             except Exception as e:
                 logging.error(f"Failed to log backend activity: {e}")
@@ -203,6 +205,7 @@ def create_app():
         if is_business_endpoint(request.path):
             try:
                 from logging_blueprint import save_backend_log_to_db
+                from csv_logger import csv_logger
                 import uuid
                 from datetime import datetime
                 
@@ -227,8 +230,9 @@ def create_app():
                     }
                 }
                 
-                # Save to database
+                # Dual logging: Save to database AND CSV
                 save_backend_log_to_db(backend_log)
+                csv_logger.log_backend(backend_log)
                 
             except Exception as e:
                 logging.error(f"Failed to log response info: {e}")

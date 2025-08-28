@@ -32,7 +32,7 @@ def get_db_connection():
 @app.route('/')
 def dashboard():
     """Main logging dashboard page"""
-    html = """
+    html = '''
     <!DOCTYPE html>
     <html lang="en">
     <head>
@@ -52,44 +52,73 @@ def dashboard():
         <div class="container mx-auto px-4 py-8">
             <!-- Header -->
             <div class="bg-white rounded-lg shadow-md p-6 mb-6">
-                <div class="flex justify-between items-center">
-                    <div>
+                <div class="space-y-6">
+                    <div class="text-center">
                         <h1 class="text-3xl font-bold text-gray-800">📊 User Interaction Logs</h1>
                         <p class="text-gray-600 mt-2">Real-time monitoring dashboard for research purposes</p>
                     </div>
-                                         <div class="flex space-x-3">
-                         <button onclick="exportFrontendLogs()" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors">
-                             📱 Export Frontend
-                         </button>
-                         <button onclick="exportBackendLogs()" class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg transition-colors">
-                             🖥️ Export Backend
-                         </button>
-                         <button onclick="exportAllLogs()" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition-colors">
-                             📥 Export All
-                         </button>
-                         <button onclick="resetLogs()" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition-colors">
-                             🔄 Reset All
-                         </button>
-                     </div>
+                    
+                    <div class="space-y-4">
+                        <!-- Export Section -->
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-700 mb-3 flex items-center">
+                                <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium mr-2">📊</span>
+                                Export Options
+                            </h3>
+                            
+                            <!-- CSV Export Buttons - First Line -->
+                            <div class="grid grid-cols-3 gap-4 mb-4">
+                                <button onclick="exportFrontendLogsCSV()" class="bg-gradient-to-r from-blue-400 to-blue-500 hover:from-blue-500 hover:to-blue-600 text-white px-4 py-3 rounded-lg transition-all duration-200 text-sm font-medium shadow-md hover:shadow-lg transform hover:-translate-y-1">
+                                    📱 Frontend CSV
+                                </button>
+                                <button onclick="exportBackendLogsCSV()" class="bg-gradient-to-r from-orange-400 to-orange-500 hover:from-orange-500 hover:to-orange-600 text-white px-4 py-3 rounded-lg transition-all duration-200 text-sm font-medium shadow-md hover:shadow-lg transform hover:-translate-y-1">
+                                    🖥️ Backend CSV
+                                </button>
+                                <button onclick="exportAllLogsCSV()" class="bg-gradient-to-r from-green-400 to-green-500 hover:from-green-500 hover:to-green-600 text-white px-4 py-3 rounded-lg transition-all duration-200 text-sm font-medium shadow-md hover:shadow-lg transform hover:-translate-y-1">
+                                    📥 All CSV
+                                </button>
+                            </div>
+                            
+                            <!-- JSON Export Buttons - Second Line -->
+                            <div class="grid grid-cols-3 gap-4 mb-4">
+                                <button onclick="exportFrontendLogsJSON()" class="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-4 py-3 rounded-lg transition-all duration-200 text-sm font-medium shadow-md hover:shadow-lg transform hover:-translate-y-1">
+                                    📱 Frontend JSON
+                                </button>
+                                <button onclick="exportBackendLogsJSON()" class="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-4 py-3 rounded-lg transition-all duration-200 text-sm font-medium shadow-md hover:shadow-lg transform hover:-translate-y-1">
+                                    🖥️ Backend JSON
+                                </button>
+                                <button onclick="exportAllLogsJSON()" class="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-4 py-3 rounded-lg transition-all duration-200 text-sm font-medium shadow-md hover:shadow-lg transform hover:-translate-y-1">
+                                    📥 All JSON
+                                </button>
+                            </div>
+                            
+                            <!-- Special Buttons - Third Line -->
+                            <div class="grid grid-cols-1 gap-4">
+                                <button onclick="resetLogs()" class="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-6 py-3 rounded-lg transition-all duration-200 text-sm font-medium shadow-md hover:shadow-lg transform hover:-translate-y-1">
+                                    🔄 Reset All Logs
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
             <!-- Stats Cards -->
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-                                 <div class="stats-card bg-white rounded-lg shadow-md p-6">
-                     <div class="flex items-center">
-                         <div class="p-3 rounded-full bg-blue-100 text-blue-600">
-                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-                             </svg>
-                         </div>
-                         <div class="ml-4">
-                             <p class="text-sm font-medium text-gray-600">Total Logs</p>
-                             <p class="text-2xl font-semibold text-gray-900" id="totalLogs">0</p>
-                             <p class="text-xs text-gray-500" id="logsBreakdown">Frontend: 0 | Backend: 0</p>
-                         </div>
-                     </div>
-                 </div>
+            <div class="grid grid-cols-1 md:grid-cols-5 gap-6 mb-6">
+                <div class="stats-card bg-white rounded-lg shadow-md p-6">
+                    <div class="flex items-center">
+                        <div class="p-3 rounded-full bg-blue-100 text-blue-600">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                            </svg>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-sm font-medium text-gray-600">Total Logs</p>
+                            <p class="text-2xl font-semibold text-gray-900" id="totalLogs">0</p>
+                            <p class="text-xs text-gray-500" id="logsBreakdown">Frontend: 0 | Backend: 0</p>
+                        </div>
+                    </div>
+                </div>
                 
                 <div class="stats-card bg-white rounded-lg shadow-md p-6">
                     <div class="flex items-center">
@@ -132,6 +161,21 @@ def dashboard():
                         </div>
                     </div>
                 </div>
+                
+                <div class="stats-card bg-white rounded-lg shadow-md p-6">
+                    <div class="flex items-center">
+                        <div class="p-3 rounded-full bg-indigo-100 text-indigo-600">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-sm font-medium text-gray-600">CSV Logs</p>
+                            <p class="text-2xl font-semibold text-gray-900" id="csvStats">0</p>
+                            <p class="text-xs text-gray-500" id="csvBreakdown">Frontend: 0 | Backend: 0</p>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- Filters and Search -->
@@ -142,32 +186,32 @@ def dashboard():
                         <input type="text" id="searchInput" placeholder="Search logs..." 
                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                     </div>
-                                         <div>
-                         <label class="block text-sm font-medium text-gray-700 mb-2">Event</label>
-                         <select id="eventFilter" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                             <option value="">All Events</option>
-                         </select>
-                     </div>
-                     <div>
-                         <label class="block text-sm font-medium text-gray-700 mb-2">Schema</label>
-                         <select id="schemaFilter" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                             <option value="">All Schemas</option>
-                         </select>
-                     </div>
-                                         <div>
-                         <label class="block text-sm font-medium text-gray-700 mb-2">Session</label>
-                         <select id="sessionFilter" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                             <option value="">All Sessions</option>
-                         </select>
-                     </div>
-                     <div>
-                         <label class="block text-sm font-medium text-gray-700 mb-2">Source</label>
-                         <select id="sourceFilter" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                             <option value="">All Sources</option>
-                             <option value="frontend">Frontend</option>
-                             <option value="backend">Backend</option>
-                         </select>
-                     </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Event</label>
+                        <select id="eventFilter" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="">All Events</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Schema</label>
+                        <select id="schemaFilter" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="">All Schemas</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Session</label>
+                        <select id="sessionFilter" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="">All Sessions</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Source</label>
+                        <select id="sourceFilter" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="">All Sources</option>
+                            <option value="frontend">Frontend</option>
+                            <option value="backend">Backend</option>
+                        </select>
+                    </div>
                 </div>
             </div>
 
@@ -179,16 +223,16 @@ def dashboard():
                 </div>
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-200">
-                                                 <thead class="bg-gray-50">
-                             <tr>
-                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time</th>
-                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Event</th>
-                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Schema</th>
-                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Session</th>
-                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Route</th>
-                             </tr>
-                         </thead>
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Event</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Schema</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Session</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Route</th>
+                            </tr>
+                        </thead>
                         <tbody class="bg-white divide-y divide-gray-200" id="logsTableBody">
                             <!-- Logs will be populated here -->
                         </tbody>
@@ -258,6 +302,17 @@ def dashboard():
                 } catch (error) {
                     console.error('❌ Error fetching stats:', error);
                 }
+                
+                // Fetch CSV stats
+                try {
+                    const csvResponse = await fetch('http://localhost:5050/api/logs/csv/stats');
+                    if (csvResponse.ok) {
+                        const csvStats = await csvResponse.json();
+                        updateCSVStatsDisplay(csvStats.csv_stats);
+                    }
+                } catch (error) {
+                    console.error('❌ Error fetching CSV stats:', error);
+                }
             }
 
             // Fetch initial logs
@@ -286,6 +341,13 @@ def dashboard():
                 const frontendCount = logs.filter(log => log.log_type === 'frontend').length;
                 const backendCount = logs.filter(log => log.log_type === 'backend').length;
                 document.getElementById('logsBreakdown').textContent = `Frontend: ${frontendCount} | Backend: ${backendCount}`;
+            }
+            
+            // Update CSV stats display
+            function updateCSVStatsDisplay(csvStats) {
+                const totalCSV = (csvStats.frontend_lines || 0) + (csvStats.backend_lines || 0);
+                document.getElementById('csvStats').textContent = totalCSV;
+                document.getElementById('csvBreakdown').textContent = `Frontend: ${csvStats.frontend_lines || 0} | Backend: ${csvStats.backend_lines || 0}`;
             }
 
             // Add new log to the list
@@ -386,33 +448,33 @@ def dashboard():
                     return;
                 }
 
-                                 filteredLogs.forEach(log => {
-                     const row = document.createElement('tr');
-                     row.className = 'log-entry hover:bg-gray-50';
-                     
-                     const timestamp = new Date(log.timestamp).toLocaleString();
-                     const eventClass = getEventClass(log.event_name);
-                     const typeClass = getTypeClass(log.log_type);
-                     
-                     row.innerHTML = `
-                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${timestamp}</td>
-                         <td class="px-6 py-4 whitespace-nowrap">
-                             <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full ${eventClass}">
-                                 ${log.event_name}
-                             </span>
-                         </td>
-                         <td class="px-6 py-4 whitespace-nowrap">
-                             <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full ${typeClass}">
-                                 ${log.log_type}
-                             </span>
-                         </td>
-                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${log.schema_version || 'N/A'}</td>
-                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${log.session_id ? log.session_id.substring(0, 8) + '...' : 'N/A'}</td>
-                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 max-w-xs truncate">${log.route || 'N/A'}</td>
-                     `;
-                     
-                     tbody.appendChild(row);
-                 });
+                filteredLogs.forEach(log => {
+                    const row = document.createElement('tr');
+                    row.className = 'log-entry hover:bg-gray-50';
+                    
+                    const timestamp = new Date(log.timestamp).toLocaleString();
+                    const eventClass = getEventClass(log.event_name);
+                    const typeClass = getTypeClass(log.log_type);
+                    
+                    row.innerHTML = `
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${timestamp}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full ${eventClass}">
+                                ${log.event_name}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full ${typeClass}">
+                                ${log.log_type}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${log.schema_version || 'N/A'}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${log.session_id ? log.session_id.substring(0, 8) + '...' : 'N/A'}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 max-w-xs truncate">${log.route || 'N/A'}</td>
+                    `;
+                    
+                    tbody.appendChild(row);
+                });
             }
 
             // Get event color class
@@ -447,10 +509,10 @@ def dashboard():
                 return classes[type] || 'bg-gray-100 text-gray-800';
             }
 
-            // Export frontend logs only
-            async function exportFrontendLogs() {
+            // Export frontend logs as JSON
+            async function exportFrontendLogsJSON() {
                 try {
-                    console.log('📱 Starting frontend logs export...');
+                    console.log('📱 Starting frontend logs JSON export...');
                     const logsResponse = await fetch('http://localhost:5050/api/logs?limit=10000');
                     if (!logsResponse.ok) {
                         throw new Error(`Failed to fetch logs: ${logsResponse.status}`);
@@ -464,28 +526,66 @@ def dashboard():
                         return;
                     }
                     
-                    // Create and download JSON file
-                    const blob = new Blob([JSON.stringify(frontendLogs, null, 2)], { type: 'application/json' });
-                    const url = window.URL.createObjectURL(blob);
-                    const link = document.createElement('a');
-                    link.href = url;
-                    link.download = `frontend_logs_export_${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.json`;
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                    window.URL.revokeObjectURL(url);
+                                         // Create and download JSON file
+                     const blob = new Blob([JSON.stringify(frontendLogs, null, 2)], { type: 'application/json' });
+                     const url = window.URL.createObjectURL(blob);
+                     const link = document.createElement('a');
+                     link.href = url;
+                     link.download = `logs_frontend_session.json`;
+                     document.body.appendChild(link);
+                     link.click();
+                     document.body.removeChild(link);
+                     window.URL.revokeObjectURL(url);
                     
-                    alert(`✅ Exported ${frontendLogs.length} frontend logs successfully!`);
+                    alert(`✅ Exported ${frontendLogs.length} frontend logs as JSON successfully!`);
                 } catch (error) {
-                    console.error('❌ Error exporting frontend logs:', error);
-                    alert(`❌ Error exporting frontend logs: ${error.message}`);
+                    console.error('❌ Error exporting frontend logs as JSON:', error);
+                    alert(`❌ Error exporting frontend logs as JSON: ${error.message}`);
                 }
             }
 
-            // Export backend logs only
-            async function exportBackendLogs() {
+            // Export frontend logs as CSV
+            async function exportFrontendLogsCSV() {
                 try {
-                    console.log('🖥️ Starting backend logs export...');
+                    console.log('📱 Starting frontend logs CSV export...');
+                    const logsResponse = await fetch('http://localhost:5050/api/logs?limit=10000');
+                    if (!logsResponse.ok) {
+                        throw new Error(`Failed to fetch logs: ${logsResponse.status}`);
+                    }
+                    
+                    const logsData = await logsResponse.json();
+                    const frontendLogs = logsData.logs.filter(log => log.log_type === 'frontend');
+                    
+                    if (frontendLogs.length === 0) {
+                        alert('⚠️ No frontend logs found to export');
+                        return;
+                    }
+                    
+                    // Convert to CSV format
+                    const csvContent = convertLogsToCSV(frontendLogs);
+                    
+                                         // Create and download CSV file
+                     const blob = new Blob([csvContent], { type: 'text/csv' });
+                     const url = window.URL.createObjectURL(blob);
+                     const link = document.createElement('a');
+                     link.href = url;
+                     link.download = `logs_frontend_session.csv`;
+                     document.body.appendChild(link);
+                     link.click();
+                     document.body.removeChild(link);
+                     window.URL.revokeObjectURL(url);
+                    
+                    alert(`✅ Exported ${frontendLogs.length} frontend logs as CSV successfully!`);
+                } catch (error) {
+                    console.error('❌ Error exporting frontend logs as CSV:', error);
+                    alert(`❌ Error exporting frontend logs as CSV: ${error.message}`);
+                }
+            }
+
+            // Export backend logs as JSON
+            async function exportBackendLogsJSON() {
+                try {
+                    console.log('🖥️ Starting backend logs JSON export...');
                     const logsResponse = await fetch('http://localhost:5050/api/logs?limit=10000');
                     if (!logsResponse.ok) {
                         throw new Error(`Failed to fetch logs: ${logsResponse.status}`);
@@ -499,28 +599,66 @@ def dashboard():
                         return;
                     }
                     
-                    // Create and download JSON file
-                    const blob = new Blob([JSON.stringify(backendLogs, null, 2)], { type: 'application/json' });
-                    const url = window.URL.createObjectURL(blob);
-                    const link = document.createElement('a');
-                    link.href = url;
-                    link.download = `backend_logs_export_${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.json`;
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                    window.URL.revokeObjectURL(url);
+                                         // Create and download JSON file
+                     const blob = new Blob([JSON.stringify(backendLogs, null, 2)], { type: 'application/json' });
+                     const url = window.URL.createObjectURL(blob);
+                     const link = document.createElement('a');
+                     link.href = url;
+                     link.download = `logs_backend_session.json`;
+                     document.body.appendChild(link);
+                     link.click();
+                     document.body.removeChild(link);
+                     window.URL.revokeObjectURL(url);
                     
-                    alert(`✅ Exported ${backendLogs.length} backend logs successfully!`);
+                    alert(`✅ Exported ${backendLogs.length} backend logs as JSON successfully!`);
                 } catch (error) {
-                    console.error('❌ Error exporting backend logs:', error);
-                    alert(`❌ Error exporting backend logs: ${error.message}`);
+                    console.error('❌ Error exporting backend logs as JSON:', error);
+                    alert(`❌ Error exporting backend logs as JSON: ${error.message}`);
                 }
             }
 
-            // Export all logs
-            async function exportAllLogs() {
+            // Export backend logs as CSV
+            async function exportBackendLogsCSV() {
                 try {
-                    console.log('📥 Starting all logs export...');
+                    console.log('🖥️ Starting backend logs CSV export...');
+                    const logsResponse = await fetch('http://localhost:5050/api/logs?limit=10000');
+                    if (!logsResponse.ok) {
+                        throw new Error(`Failed to fetch logs: ${logsResponse.status}`);
+                    }
+                    
+                    const logsData = await logsResponse.json();
+                    const backendLogs = logsData.logs.filter(log => log.log_type === 'backend');
+                    
+                    if (backendLogs.length === 0) {
+                        alert('⚠️ No backend logs found to export');
+                        return;
+                    }
+                    
+                    // Convert to CSV format
+                    const csvContent = convertLogsToCSV(backendLogs);
+                    
+                                         // Create and download CSV file
+                     const blob = new Blob([csvContent], { type: 'text/csv' });
+                     const url = window.URL.createObjectURL(blob);
+                     const link = document.createElement('a');
+                     link.href = url;
+                     link.download = `logs_backend_session.csv`;
+                     document.body.appendChild(link);
+                     link.click();
+                     document.body.removeChild(link);
+                     window.URL.revokeObjectURL(url);
+                    
+                    alert(`✅ Exported ${backendLogs.length} backend logs as CSV successfully!`);
+                } catch (error) {
+                    console.error('❌ Error exporting backend logs as CSV:', error);
+                    alert(`❌ Error exporting backend logs as CSV: ${error.message}`);
+                }
+            }
+
+            // Export all logs as JSON
+            async function exportAllLogsJSON() {
+                try {
+                    console.log('📥 Starting all logs JSON export...');
                     const logsResponse = await fetch('http://localhost:5050/api/logs?limit=10000');
                     if (!logsResponse.ok) {
                         throw new Error(`Failed to fetch logs: ${logsResponse.status}`);
@@ -534,23 +672,108 @@ def dashboard():
                         return;
                     }
                     
-                    // Create and download JSON file
-                    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
-                    const url = window.URL.createObjectURL(blob);
-                    const link = document.createElement('a');
-                    link.href = url;
-                    link.download = `all_logs_export_${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.json`;
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                    window.URL.revokeObjectURL(url);
+                                         // Create and download JSON file
+                     const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+                     const url = window.URL.createObjectURL(blob);
+                     const link = document.createElement('a');
+                     link.href = url;
+                     link.download = `logs_all_combined.json`;
+                     document.body.appendChild(link);
+                     link.click();
+                     document.body.removeChild(link);
+                     window.URL.revokeObjectURL(url);
                     
-                    alert(`✅ Exported ${exportData.length} logs successfully!`);
+                    alert(`✅ Exported ${exportData.length} logs as JSON successfully!`);
                 } catch (error) {
-                    console.error('❌ Error exporting all logs:', error);
-                    alert(`❌ Error exporting all logs: ${error.message}`);
+                    console.error('❌ Error exporting all logs as JSON:', error);
+                    alert(`❌ Error exporting all logs as JSON: ${error.message}`);
                 }
             }
+
+            // Export all logs as CSV
+            async function exportAllLogsCSV() {
+                try {
+                    console.log('📥 Starting all logs CSV export...');
+                    const logsResponse = await fetch('http://localhost:5050/api/logs?limit=10000');
+                    if (!logsResponse.ok) {
+                        throw new Error(`Failed to fetch logs: ${logsResponse.status}`);
+                    }
+                    
+                    const logsData = await logsResponse.json();
+                    const exportData = logsData.logs;
+                    
+                    if (exportData.length === 0) {
+                        alert('⚠️ No logs found to export');
+                        return;
+                    }
+                    
+                    // Convert to CSV format
+                    const csvContent = convertLogsToCSV(exportData);
+                    
+                                         // Create and download CSV file
+                     const blob = new Blob([csvContent], { type: 'text/csv' });
+                     const url = window.URL.createObjectURL(blob);
+                     const link = document.createElement('a');
+                     link.href = url;
+                     link.download = `logs_all_combined.csv`;
+                     document.body.appendChild(link);
+                     link.click();
+                     document.body.removeChild(link);
+                     window.URL.revokeObjectURL(url);
+                    
+                    alert(`✅ Exported ${exportData.length} logs as CSV successfully!`);
+                } catch (error) {
+                    console.error('❌ Error exporting all logs as CSV:', error);
+                    alert(`❌ Error exporting all logs as CSV: ${error.message}`);
+                }
+            }
+
+            // Helper function to convert logs to CSV format
+            function convertLogsToCSV(logs) {
+                if (logs.length === 0) return '';
+                
+                // Define CSV headers based on the first log entry
+                const headers = [
+                    'id',
+                    'timestamp',
+                    'log_type',
+                    'schema_version',
+                    'event_name',
+                    'session_id',
+                    'attempt_id',
+                    'browser_id',
+                    'route',
+                    'details'
+                ];
+                
+                // Create CSV header row
+                const csvRows = [headers.join(',')];
+                
+                // Convert each log to CSV row
+                logs.forEach(log => {
+                    const row = headers.map(header => {
+                        let value = log[header] || '';
+                        
+                        // Handle special cases
+                        if (header === 'details' && typeof value === 'object') {
+                            value = JSON.stringify(value);
+                        }
+                        
+                        // Escape commas and quotes in CSV
+                        if (typeof value === 'string' && (value.includes(',') || value.includes('"'))) {
+                            value = `"${value.replace(/"/g, '""')}"`;
+                        }
+                        
+                        return value;
+                    });
+                    
+                    csvRows.push(row.join(','));
+                });
+                
+                return csvRows.join('\\n');
+            }
+
+
 
             // Reset logs
             async function resetLogs() {
@@ -585,7 +808,7 @@ def dashboard():
         </script>
     </body>
     </html>
-    """
+    '''
     return html
 
 if __name__ == "__main__":

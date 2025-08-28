@@ -8,6 +8,7 @@ import time
 from typing import List, Dict, Any
 import sqlite3
 import logging
+from csv_logger import csv_logger
 
 # Create the logging blueprint
 logging_bp = Blueprint('logging', __name__, url_prefix='/api/logs')
@@ -503,3 +504,113 @@ def health_check():
             'error': str(e),
             'timestamp': datetime.now().isoformat()
         }), 500
+
+@logging_bp.route('/csv', methods=['POST', 'OPTIONS'])
+def receive_csv_logs():
+    """Receive CSV format logs from frontend"""
+    # Handle preflight OPTIONS request
+    if request.method == 'OPTIONS':
+        response = jsonify({'status': 'ok'})
+        return response
+    
+    try:
+        data = request.get_json()
+        if not data or 'csv_data' not in data:
+            return jsonify({'error': 'No CSV data provided'}), 400
+        
+        csv_lines = data['csv_data']
+        if not isinstance(csv_lines, list):
+            return jsonify({'error': 'CSV data must be an array'}), 400
+        
+        logging.info(f"Received {len(csv_lines)} CSV log lines")
+        
+        # Log to CSV file
+        csv_logger.log_frontend_batch(csv_lines)
+        
+        response = jsonify({'message': f'Successfully received {len(csv_lines)} CSV log lines', 'status': 'success'})
+        return response
+        
+    except Exception as e:
+        logging.error(f"Error processing CSV logs: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@logging_bp.route('/csv/stats', methods=['GET', 'OPTIONS'])
+def get_csv_stats():
+    """Get CSV log file statistics"""
+    # Handle preflight OPTIONS request
+    if request.method == 'OPTIONS':
+        response = jsonify({'status': 'ok'})
+        return response
+    
+    try:
+        stats = csv_logger.get_csv_stats()
+        response = jsonify({
+            'status': 'success',
+            'csv_stats': stats,
+            'timestamp': datetime.now().isoformat()
+        })
+        return response
+        
+    except Exception as e:
+        logging.error(f"Error getting CSV stats: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@logging_bp.route('/csv/download', methods=['GET', 'OPTIONS'])
+def download_csv_logs():
+    """Download CSV log files"""
+    # Handle preflight OPTIONS request
+    if request.method == 'OPTIONS':
+        response = jsonify({'status': 'ok'})
+        return response
+    
+    try:
+        from flask import send_file
+        import tempfile
+        import zipfile
+        
+        # Create a temporary zip file containing both CSV files
+        with tempfile.NamedTemporaryFile(suffix='.zip', delete=False) as temp_zip:
+            with zipfile.ZipFile(temp_zip.name, 'w') as zip_file:
+                # Add frontend CSV if it exists
+                if os.path.exists(csv_logger.frontend_csv_file):
+                    zip_file.write(csv_logger.frontend_csv_file, 'frontend_logs.csv')
+                
+                # Add backend CSV if it exists
+                if os.path.exists(csv_logger.backend_csv_file):
+                    zip_file.write(csv_logger.backend_csv_file, 'backend_logs.csv')
+            
+            temp_zip_path = temp_zip.name
+        
+        # Send the zip file
+        return send_file(
+            temp_zip_path,
+            as_attachment=True,
+            download_name=f'logs_export_{datetime.now().strftime("%Y%m%d_%H%M%S")}.zip',
+            mimetype='application/zip'
+        )
+        
+    except Exception as e:
+        logging.error(f"Error downloading CSV logs: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@logging_bp.route('/csv/clear', methods=['POST', 'OPTIONS'])
+def clear_csv_logs():
+    """Clear CSV log files"""
+    # Handle preflight OPTIONS request
+    if request.method == 'OPTIONS':
+        response = jsonify({'status': 'ok'})
+        return response
+    
+    try:
+        csv_logger.clear_csv_files()
+        
+        response = jsonify({
+            'message': 'CSV log files cleared successfully',
+            'status': 'success',
+            'timestamp': datetime.now().isoformat()
+        })
+        return response
+        
+    except Exception as e:
+        logging.error(f"Error clearing CSV logs: {e}")
+        return jsonify({'error': str(e)}), 500

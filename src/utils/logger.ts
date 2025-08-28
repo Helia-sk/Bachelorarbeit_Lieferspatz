@@ -1,3 +1,5 @@
+import { CSVLogger } from './csvLogger';
+
 interface UserInteraction {
   event: string;
   attempt_id: string;
@@ -62,6 +64,9 @@ class UserInteractionLogger {
   private logSystemNoise: boolean = true;  // Whether to log system noise at all
   private filterSystemNoise: boolean = true; // Whether to filter from user journey view
   private strictBusinessAPIFiltering: boolean = true; // Only log business API calls
+  
+  // CSV Logger for dual format logging
+  private csvLogger: CSVLogger = new CSVLogger();
 
   constructor() {
     console.log('🚀 UserInteractionLogger initializing...');
@@ -326,6 +331,9 @@ class UserInteractionLogger {
     console.log('📝 Logging interaction:', { event, details });
     this.logQueue.push(interaction);
     console.log('📊 Queue size:', this.logQueue.length);
+    
+    // Dual logging: Also log to CSV format
+    this.csvLogger.logToCSV(interaction);
     
     // Flush immediately if queue is full
     if (this.logQueue.length >= this.batchSize) {
