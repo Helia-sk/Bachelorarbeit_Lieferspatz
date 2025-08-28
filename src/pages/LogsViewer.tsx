@@ -47,7 +47,7 @@ const LogsViewer: React.FC = () => {
         {logs.map((l) => (
           <div key={l.id} className="p-4 bg-white rounded shadow-sm">
             <div className="text-sm text-gray-600">{new Date(l.timestamp).toLocaleString()}</div>
-            <div className="font-medium mt-1">{l.action}</div>
+            <div className="font-medium mt-1">{l.event_name}</div>
             <pre className="mt-2 text-xs text-gray-700 overflow-auto max-h-40">{JSON.stringify(JSON.parse(l.description || '{}'), null, 2)}</pre>
           </div>
         ))}

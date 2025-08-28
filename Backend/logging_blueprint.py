@@ -66,8 +66,8 @@ def save_log_to_db(log_data: Dict[str, Any]):
             log_data['id'],
             log_data['timestamp'],
             'frontend',
-            log_data.get('schema', 'frontend.v1'),
-            log_data['event'],
+            log_data.get('schema_version', 'frontend.v1'),
+            log_data['event_name'],
             log_data.get('session_id'),
             log_data.get('attempt_id'),
             log_data.get('browser_id'),
@@ -75,7 +75,7 @@ def save_log_to_db(log_data: Dict[str, Any]):
             json.dumps(log_data)
         ))
         conn.commit()
-        logging.info(f"Frontend log saved: {log_data['event']}")
+        logging.info(f"Frontend log saved: {log_data['event_name']}")
     except Exception as e:
         logging.error(f"Error saving frontend log to database: {e}")
         logging.error(f"Log data: {log_data}")
@@ -97,8 +97,8 @@ def save_backend_log_to_db(log_data: Dict[str, Any]):
             log_data['id'],
             log_data['timestamp'],
             'backend',
-            log_data.get('schema', 'backend.v1'),
-            log_data['event'],
+            log_data.get('schema_version', 'backend.v1'),
+            log_data['event_name'],
             log_data.get('session_id'),
             log_data.get('attempt_id'),
             log_data.get('browser_id'),
@@ -106,7 +106,7 @@ def save_backend_log_to_db(log_data: Dict[str, Any]):
             json.dumps(log_data)
         ))
         conn.commit()
-        logging.info(f"Backend log saved: {log_data['event']}")
+        logging.info(f"Backend log saved: {log_data['event_name']}")
     except Exception as e:
         logging.error(f"Error saving backend log to database: {e}")
         logging.error(f"Log data: {log_data}")
@@ -165,7 +165,7 @@ def receive_logs():
         
         for log in logs:
             # Validate required fields for new format
-            required_fields = ['id', 'timestamp', 'event']
+            required_fields = ['id', 'timestamp', 'event_name']
             for field in required_fields:
                 if field not in log:
                     logging.warning(f"Missing required field: {field}")
@@ -449,22 +449,15 @@ def receive_backend_logs():
         logging.info(f"Received {len(logs)} backend logs")
         
         for log in logs:
-            # Validate required fields for frontend logs
-            if log.get('log_type') == 'frontend' or 'event' in log:
-                required_fields = ['id', 'timestamp', 'event']
-            else:
-                required_fields = ['id', 'timestamp', 'action', 'component']
-                
+            # Validate required fields for new format
+            required_fields = ['id', 'timestamp', 'event_name']
             for field in required_fields:
                 if field not in log:
                     logging.warning(f"Missing required field: {field}")
                     continue
             
             # Save to database
-            if log.get('log_type') == 'frontend' or 'event' in log:
-                save_log_to_db(log)
-            else:
-                save_backend_log_to_db(log)
+            save_log_to_db(log)
             
             # Broadcast to connected clients
             broadcast_log(log)

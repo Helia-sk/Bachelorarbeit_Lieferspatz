@@ -1,7 +1,9 @@
 import { CSVLogger } from './csvLogger';
 
 interface UserInteraction {
-  event: string;
+  id: string;
+  timestamp: string;
+  event_name: string;
   attempt_id: string;
   session_id: string;
   browser_id: string;
@@ -17,7 +19,7 @@ interface UserInteraction {
   };
   event_time: string;
   app_version: string;
-  schema: string;
+  schema_version: string;
   url: string;
   userAgent: string;
   viewport: {
@@ -33,18 +35,14 @@ interface UserInteraction {
   // System noise detection
   system_noise?: boolean;
   noise_reason?: string;
-  // Additional properties for LogViewer compatibility
-  type?: string;
-  source?: string;
-  data?: any;
-  action?: string;
+  // Component information
   component?: string;
-  sessionId?: string; // Alias for session_id for LogViewer compatibility
-  // Additional properties for LogViewer display
-  id?: string;
+  // User identification
   userId?: string;
-  details?: any;
-  timestamp?: string;
+  // Form submission specific - field presence mapping
+  field_presence_map?: Record<string, boolean>;
+  // All event-specific details consolidated
+  details: Record<string, any>;
 }
 
 class UserInteractionLogger {
@@ -120,7 +118,7 @@ class UserInteractionLogger {
       inputValue: target.type === 'password' ? '[HIDDEN]' : inputData.value.substring(0, 100),
       inputId: target.id,
       finalValueLength: inputData.value.length,
-      schema: 'input_change.v1'
+      schema_version: 'input_change.v1'
     });
     
     // Clean up
@@ -151,7 +149,7 @@ class UserInteractionLogger {
       inputValue: target.type === 'password' ? '[HIDDEN]' : finalValue.substring(0, 100),
       inputId: target.id,
       finalValueLength: finalValue.length,
-      schema: 'input_change.v1'
+      schema_version: 'input_change.v1'
     });
     
     // Clean up
@@ -182,7 +180,7 @@ class UserInteractionLogger {
               tagName: target.tagName,
               x: e.clientX,
               y: e.clientY,
-              schema: 'click.v1'
+              schema_version: 'click.v1'
             });
           }
         });
@@ -190,6 +188,29 @@ class UserInteractionLogger {
     // Capture form submissions
     document.addEventListener('submit', (e) => {
       const form = e.target as HTMLFormElement;
+      
+      // Create field presence map - tracks which fields were filled vs empty
+      const fieldPresenceMap: Record<string, boolean> = {};
+      Array.from(form.elements).forEach(el => {
+        if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement || el instanceof HTMLSelectElement) {
+          const fieldName = el.name || el.id || el.tagName.toLowerCase();
+          if (fieldName) {
+            // Check if field has a value (filled by user)
+            let hasValue = false;
+            if (el instanceof HTMLInputElement) {
+              if (el.type === 'checkbox' || el.type === 'radio') {
+                hasValue = el.checked;
+              } else {
+                hasValue = el.value.trim().length > 0;
+              }
+            } else if (el instanceof HTMLTextAreaElement || el instanceof HTMLSelectElement) {
+              hasValue = el.value.trim().length > 0;
+            }
+            fieldPresenceMap[fieldName] = hasValue;
+          }
+        }
+      });
+      
       this.logInteraction('form_submit', {
         trigger: 'submit',
         formId: form.id,
@@ -200,7 +221,8 @@ class UserInteractionLogger {
           type: (el as HTMLInputElement).type,
           required: (el as HTMLInputElement).required
         })),
-        schema: 'form_submit.v1'
+        field_presence_map: fieldPresenceMap,
+        schema_version: 'form_submit.v2'
       });
     });
 
@@ -231,7 +253,7 @@ class UserInteractionLogger {
           scrollY: window.scrollY,
           scrollHeight: document.documentElement.scrollHeight,
           clientHeight: document.documentElement.clientHeight,
-          schema: 'scroll.v1'
+          schema_version: 'scroll.v1'
         });
       }, 100);
     });
@@ -247,7 +269,7 @@ class UserInteractionLogger {
           innerHeight: window.innerHeight,
           outerWidth: window.outerWidth,
           outerHeight: window.outerHeight,
-          schema: 'window_resize.v1'
+          schema_version: 'window_resize.v1'
         });
       }, 100);
     });
@@ -260,7 +282,7 @@ class UserInteractionLogger {
       search: window.location.search,
       hash: window.location.hash,
       referrer: document.referrer,
-      schema: 'page_view.v1'
+      schema_version: 'page_view.v1'
     });
   }
 
@@ -280,10 +302,10 @@ class UserInteractionLogger {
     // if (noiseCheck.isNoise) return;
     
     // 2. Log but flag as system noise (current approach)
-    const interaction = {
+    const interaction: UserInteraction = {
       id: `log_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       timestamp: new Date().toISOString(),
-      event,
+      event_name: event,
       attempt_id: `log_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       session_id: this.sessionId,
       browser_id: this.userId || 'anonymous',
@@ -299,7 +321,7 @@ class UserInteractionLogger {
       },
       event_time: new Date().toISOString(),
       app_version: 'web-1.4.2',
-      schema: details.schema || 'frontend.v1',
+      schema_version: details.schema_version || 'frontend.v1',
       // Additional context
       url: window.location.href,
       userAgent: navigator.userAgent,
@@ -316,15 +338,13 @@ class UserInteractionLogger {
       // System noise detection
       system_noise: noiseCheck.isNoise,
       noise_reason: noiseCheck.reason,
-      // Additional properties for LogViewer compatibility
-      type: event,
-      source: 'frontend',
-      data: details,
-      action: event,
+      // Component information
       component: details.component || 'unknown',
-      sessionId: this.sessionId, // Alias for session_id
-      // Additional properties for LogViewer display
+      // User identification
       userId: this.userId,
+      // Form submission specific - field presence mapping
+      field_presence_map: details.field_presence_map,
+      // All event-specific details consolidated
       details: details
     };
 
@@ -642,7 +662,7 @@ class UserInteractionLogger {
       trigger: 'click',
       buttonText,
       buttonId,
-      schema: 'button_click.v1',
+      schema_version: 'button_click.v1',
       ...additionalDetails
     });
   }
@@ -653,7 +673,7 @@ class UserInteractionLogger {
       from,
       to,
       method,
-      schema: 'navigation.v1'
+      schema_version: 'navigation.v1'
     });
   }
 
@@ -663,7 +683,7 @@ class UserInteractionLogger {
       errorMessage: error.message,
       errorStack: error.stack,
       context,
-      schema: 'error.v1'
+      schema_version: 'error.v1'
     });
   }
 
@@ -673,7 +693,7 @@ class UserInteractionLogger {
       metric,
       value,
       unit,
-      schema: 'performance.v1'
+      schema_version: 'performance.v1'
     });
   }
 }

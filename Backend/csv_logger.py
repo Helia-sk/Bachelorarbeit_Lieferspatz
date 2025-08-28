@@ -60,7 +60,7 @@ class CSVLogger:
         try:
             csv_line = [
                 log_data.get('timestamp', ''),
-                log_data.get('event', ''),
+                log_data.get('event_name', ''),
                 log_data.get('session_id', ''),
                 log_data.get('route', ''),
                 log_data.get('method', ''),
@@ -87,7 +87,7 @@ class CSVLogger:
             details = log_data.get('details', {})
             csv_line = [
                 log_data.get('timestamp', ''),
-                log_data.get('event', ''),
+                log_data.get('event_name', ''),
                 log_data.get('route', ''),
                 details.get('method', ''),
                 details.get('status_code', ''),

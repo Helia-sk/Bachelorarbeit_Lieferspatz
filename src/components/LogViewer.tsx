@@ -108,17 +108,17 @@ const LogViewer: React.FC<LogViewerProps> = ({ isOpen, onClose }) => {
 
     if (searchTerm) {
       filtered = filtered.filter(log =>
-        log.type?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        log.source?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        log.event_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        log.component?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         log.url?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         log.route?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        log.event?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        JSON.stringify(log.data).toLowerCase().includes(searchTerm.toLowerCase())
+        log.event_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        JSON.stringify(log.details).toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
     if (selectedAction) {
-      filtered = filtered.filter(log => log.action === selectedAction);
+      filtered = filtered.filter(log => log.event_name === selectedAction);
     }
 
     if (selectedComponent) {
@@ -126,7 +126,7 @@ const LogViewer: React.FC<LogViewerProps> = ({ isOpen, onClose }) => {
     }
 
     if (selectedSession) {
-      filtered = filtered.filter(log => log.sessionId === selectedSession);
+      filtered = filtered.filter(log => log.session_id === selectedSession);
     }
 
     setFilteredLogs(filtered);
@@ -317,7 +317,7 @@ const LogViewer: React.FC<LogViewerProps> = ({ isOpen, onClose }) => {
               className="px-3 py-2 border rounded"
             >
               <option value="">All Actions</option>
-              {getUniqueValues('action').map((action: string) => (
+              {getUniqueValues('event_name').map((action: string) => (
                 <option key={action} value={action}>{action}</option>
               ))}
             </select>
@@ -338,7 +338,7 @@ const LogViewer: React.FC<LogViewerProps> = ({ isOpen, onClose }) => {
             >
               <option value="">All Sessions</option>
               <option value={currentSessionId}>Current Session</option>
-              {getUniqueValues('sessionId').map((sessionId: string) => (
+              {getUniqueValues('session_id').map((sessionId: string) => (
                 <option key={sessionId} value={sessionId}>{sessionId.substring(0, 20)}...</option>
               ))}
             </select>
@@ -378,8 +378,8 @@ const LogViewer: React.FC<LogViewerProps> = ({ isOpen, onClose }) => {
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getActionColor(log.action || '')}`}>
-                          {log.action}
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getActionColor(log.event_name || '')}`}>
+                          {log.event_name}
                         </span>
                         <span className="text-sm text-gray-600">{log.component}</span>
                         <span className="text-xs text-gray-500">{formatTimestamp(log.timestamp || log.event_time || '')}</span>
@@ -396,7 +396,7 @@ const LogViewer: React.FC<LogViewerProps> = ({ isOpen, onClose }) => {
                       )}
                       
                       <div className="text-sm text-gray-700 mb-2">
-                        <strong>Session:</strong> {log.sessionId?.substring(0, 20) || log.session_id?.substring(0, 20) || 'Unknown'}...
+                        <strong>Session:</strong> {log.session_id?.substring(0, 20) || 'Unknown'}...
                       </div>
                       
                       {Object.keys(log.details).length > 0 && (
@@ -412,7 +412,7 @@ const LogViewer: React.FC<LogViewerProps> = ({ isOpen, onClose }) => {
                     <div className="text-xs text-gray-500 text-right ml-4">
                       <div>Viewport: {log.viewport.width}×{log.viewport.height}</div>
                       <div className="mt-1">
-                        {(log.sessionId === currentSessionId || log.session_id === currentSessionId) && (
+                        {(log.session_id === currentSessionId) && (
                           <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">
                             Current
                           </span>

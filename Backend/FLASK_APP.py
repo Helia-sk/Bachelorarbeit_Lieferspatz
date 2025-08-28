@@ -169,8 +169,8 @@ def create_app():
                 backend_log = {
                     'id': str(uuid.uuid4()),
                     'timestamp': datetime.now().isoformat(),
-                    'event': 'http_request',
-                    'schema': 'http_request.v1',
+                    'event_name': 'http_request',
+                    'schema_version': 'http_request.v1',
                     'session_id': 'backend',
                     'attempt_id': str(uuid.uuid4()),
                     'browser_id': 'backend',
@@ -213,8 +213,8 @@ def create_app():
                 backend_log = {
                     'id': str(uuid.uuid4()),
                     'timestamp': datetime.now().isoformat(),
-                    'event': 'http_response',
-                    'schema': 'http_response.v1',
+                    'event_name': 'http_response',
+                    'schema_version': 'http_response.v1',
                     'session_id': 'backend',
                     'attempt_id': str(uuid.uuid4()),
                     'browser_id': 'backend',

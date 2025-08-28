@@ -55,7 +55,7 @@ def dashboard():
                 <div class="space-y-6">
                     <div class="text-center">
                         <h1 class="text-3xl font-bold text-gray-800">📊 User Interaction Logs</h1>
-                        <p class="text-gray-600 mt-2">Real-time monitoring dashboard for research purposes</p>
+                        <p class="text-gray-600 mt-2">Real-time Log monitoring dashboard</p>
                     </div>
                     
                     <div class="space-y-4">
@@ -103,9 +103,10 @@ def dashboard():
                 </div>
             </div>
 
-            <!-- Stats Cards -->
-            <div class="grid grid-cols-1 md:grid-cols-5 gap-6 mb-6">
-                <div class="stats-card bg-white rounded-lg shadow-md p-6">
+            <!-- Log Counts -->
+            <div class="grid grid-cols-2 gap-6 mb-6">
+                <!-- Frontend Logs Count -->
+                <div class="bg-white rounded-lg shadow-md p-6">
                     <div class="flex items-center">
                         <div class="p-3 rounded-full bg-blue-100 text-blue-600">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -113,104 +114,24 @@ def dashboard():
                             </svg>
                         </div>
                         <div class="ml-4">
-                            <p class="text-sm font-medium text-gray-600">Total Logs</p>
-                            <p class="text-2xl font-semibold text-gray-900" id="totalLogs">0</p>
-                            <p class="text-xs text-gray-500" id="logsBreakdown">Frontend: 0 | Backend: 0</p>
+                            <p class="text-sm font-medium text-gray-600">Frontend Logs</p>
+                            <p class="text-2xl font-semibold text-gray-900" id="frontendLogsCount">0</p>
                         </div>
                     </div>
                 </div>
                 
-                <div class="stats-card bg-white rounded-lg shadow-md p-6">
+                <!-- Backend Logs Count -->
+                <div class="bg-white rounded-lg shadow-md p-6">
                     <div class="flex items-center">
-                        <div class="p-3 rounded-full bg-green-100 text-green-600">
+                        <div class="p-3 rounded-full bg-orange-100 text-orange-600">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
                             </svg>
                         </div>
                         <div class="ml-4">
-                            <p class="text-sm font-medium text-gray-600">Active Sessions</p>
-                            <p class="text-2xl font-semibold text-gray-900" id="totalSessions">0</p>
+                            <p class="text-sm font-medium text-gray-600">Backend Logs</p>
+                            <p class="text-2xl font-semibold text-gray-900" id="backendLogsCount">0</p>
                         </div>
-                    </div>
-                </div>
-                
-                <div class="stats-card bg-white rounded-lg shadow-md p-6">
-                    <div class="flex items-center">
-                        <div class="p-3 rounded-full bg-yellow-100 text-yellow-600">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                            </svg>
-                        </div>
-                        <div class="ml-4">
-                            <p class="text-sm font-medium text-gray-600">Last 24h</p>
-                            <p class="text-2xl font-semibold text-gray-900" id="recentActivity">0</p>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="stats-card bg-white rounded-lg shadow-md p-6">
-                    <div class="flex items-center">
-                        <div class="p-3 rounded-full bg-purple-100 text-purple-600">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-                            </svg>
-                        </div>
-                        <div class="ml-4">
-                            <p class="text-sm font-medium text-gray-600">Live Updates</p>
-                            <p class="text-2xl font-semibold text-gray-900" id="connectionStatus">🟢 Live</p>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="stats-card bg-white rounded-lg shadow-md p-6">
-                    <div class="flex items-center">
-                        <div class="p-3 rounded-full bg-indigo-100 text-indigo-600">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                            </svg>
-                        </div>
-                        <div class="ml-4">
-                            <p class="text-sm font-medium text-gray-600">CSV Logs</p>
-                            <p class="text-2xl font-semibold text-gray-900" id="csvStats">0</p>
-                            <p class="text-xs text-gray-500" id="csvBreakdown">Frontend: 0 | Backend: 0</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Filters and Search -->
-            <div class="bg-white rounded-lg shadow-md p-6 mb-6">
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Search</label>
-                        <input type="text" id="searchInput" placeholder="Search logs..." 
-                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Event</label>
-                        <select id="eventFilter" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                            <option value="">All Events</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Schema</label>
-                        <select id="schemaFilter" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                            <option value="">All Schemas</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Session</label>
-                        <select id="sessionFilter" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                            <option value="">All Sessions</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Source</label>
-                        <select id="sourceFilter" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                            <option value="">All Sources</option>
-                            <option value="frontend">Frontend</option>
-                            <option value="backend">Backend</option>
-                        </select>
                     </div>
                 </div>
             </div>
@@ -243,7 +164,6 @@ def dashboard():
 
         <script>
             let logs = [];
-            let filteredLogs = [];
             let socket = null;
             let stats = {};
 
@@ -252,7 +172,6 @@ def dashboard():
                 fetchStats();
                 fetchLogs();
                 setupWebSocket();
-                setupFilters();
             });
 
             // WebSocket connection
@@ -262,14 +181,10 @@ def dashboard():
                     
                     socket.on('connect', () => {
                         console.log('✅ Connected to logging server');
-                        document.getElementById('connectionStatus').textContent = '🟢 Live';
-                        document.getElementById('connectionStatus').className = 'text-2xl font-semibold text-green-600';
                     });
 
                     socket.on('disconnect', () => {
                         console.log('❌ Disconnected from logging server');
-                        document.getElementById('connectionStatus').textContent = '🔴 Offline';
-                        document.getElementById('connectionStatus').className = 'text-2xl font-semibold text-red-600';
                     });
 
                     socket.on('new_log', (log) => {
@@ -281,7 +196,6 @@ def dashboard():
                     socket.on('logs_reset', () => {
                         console.log('🔄 Logs reset received');
                         logs = [];
-                        filteredLogs = [];
                         renderLogs();
                         fetchStats();
                     });
@@ -302,17 +216,6 @@ def dashboard():
                 } catch (error) {
                     console.error('❌ Error fetching stats:', error);
                 }
-                
-                // Fetch CSV stats
-                try {
-                    const csvResponse = await fetch('http://localhost:5050/api/logs/csv/stats');
-                    if (csvResponse.ok) {
-                        const csvStats = await csvResponse.json();
-                        updateCSVStatsDisplay(csvStats.csv_stats);
-                    }
-                } catch (error) {
-                    console.error('❌ Error fetching CSV stats:', error);
-                }
             }
 
             // Fetch initial logs
@@ -322,9 +225,8 @@ def dashboard():
                     if (response.ok) {
                         const data = await response.json();
                         logs = data.logs || [];
-                        filteredLogs = [...logs];
                         renderLogs();
-                        updateFilters();
+                        updateStatsDisplay(); // Update counts after fetching logs
                     }
                 } catch (error) {
                     console.error('❌ Error fetching logs:', error);
@@ -333,28 +235,22 @@ def dashboard():
 
             // Update stats display
             function updateStatsDisplay() {
-                document.getElementById('totalLogs').textContent = stats.total_logs || 0;
-                document.getElementById('totalSessions').textContent = stats.total_sessions || 0;
-                document.getElementById('recentActivity').textContent = stats.recent_activity_24h || 0;
-                
-                // Update logs breakdown
+                // Update log counts
                 const frontendCount = logs.filter(log => log.log_type === 'frontend').length;
                 const backendCount = logs.filter(log => log.log_type === 'backend').length;
-                document.getElementById('logsBreakdown').textContent = `Frontend: ${frontendCount} | Backend: ${backendCount}`;
+                
+                document.getElementById('frontendLogsCount').textContent = frontendCount;
+                document.getElementById('backendLogsCount').textContent = backendCount;
             }
             
-            // Update CSV stats display
-            function updateCSVStatsDisplay(csvStats) {
-                const totalCSV = (csvStats.frontend_lines || 0) + (csvStats.backend_lines || 0);
-                document.getElementById('csvStats').textContent = totalCSV;
-                document.getElementById('csvBreakdown').textContent = `Frontend: ${csvStats.frontend_lines || 0} | Backend: ${csvStats.backend_lines || 0}`;
-            }
+
 
             // Add new log to the list
             function addNewLog(log) {
                 logs.unshift(log);
                 if (logs.length > 1000) logs = logs.slice(0, 1000); // Keep only last 1000
-                applyFilters();
+                renderLogs();
+                updateStatsDisplay();
             }
 
             // Update stats when new logs arrive
@@ -363,81 +259,14 @@ def dashboard():
                 updateStatsDisplay();
             }
 
-            // Setup filter event listeners
-            function setupFilters() {
-                document.getElementById('searchInput').addEventListener('input', applyFilters);
-                document.getElementById('eventFilter').addEventListener('change', applyFilters);
-                document.getElementById('schemaFilter').addEventListener('change', applyFilters);
-                document.getElementById('sessionFilter').addEventListener('change', applyFilters);
-                document.getElementById('sourceFilter').addEventListener('change', applyFilters);
-            }
 
-            // Apply filters
-            function applyFilters() {
-                const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-                const selectedEvent = document.getElementById('eventFilter').value;
-                const selectedSchema = document.getElementById('schemaFilter').value;
-                const selectedSession = document.getElementById('sessionFilter').value;
-                const selectedSource = document.getElementById('sourceFilter').value;
-
-                filteredLogs = logs.filter(log => {
-                    const matchesSearch = !searchTerm || 
-                        log.event_name?.toLowerCase().includes(searchTerm) ||
-                        log.schema_version?.toLowerCase().includes(searchTerm) ||
-                        (log.details && JSON.stringify(log.details).toLowerCase().includes(searchTerm));
-                    
-                    const matchesEvent = !selectedEvent || log.event_name === selectedEvent;
-                    const matchesSchema = !selectedSchema || log.schema_version === selectedSchema;
-                    const matchesSession = !selectedSession || log.session_id === selectedSession;
-                    
-                    // Source filter logic
-                    let matchesSource = true;
-                    if (selectedSource === 'frontend') {
-                        matchesSource = log.log_type === 'frontend';
-                    } else if (selectedSource === 'backend') {
-                        matchesSource = log.log_type === 'backend';
-                    }
-
-                    return matchesSearch && matchesEvent && matchesSchema && matchesSession && matchesSource;
-                });
-
-                renderLogs();
-            }
-
-            // Update filter options
-            function updateFilters() {
-                const events = [...new Set(logs.map(log => log.event_name))];
-                const schemas = [...new Set(logs.map(log => log.schema_version))];
-                const sessions = [...new Set(logs.map(log => log.session_id))];
-
-                populateSelect('eventFilter', events);
-                populateSelect('schemaFilter', schemas);
-                populateSelect('sessionFilter', sessions);
-            }
-
-            function populateSelect(selectId, options) {
-                const select = document.getElementById(selectId);
-                const currentValue = select.value;
-                
-                // Keep the "All" option
-                select.innerHTML = `<option value="">All ${selectId.replace('Filter', 's')}</option>`;
-                
-                options.forEach(option => {
-                    const optionElement = document.createElement('option');
-                    optionElement.value = option;
-                    optionElement.textContent = option;
-                    select.appendChild(optionElement);
-                });
-                
-                select.value = currentValue;
-            }
 
             // Render logs table
             function renderLogs() {
                 const tbody = document.getElementById('logsTableBody');
                 tbody.innerHTML = '';
 
-                if (filteredLogs.length === 0) {
+                if (logs.length === 0) {
                     tbody.innerHTML = `
                         <tr>
                             <td colspan="6" class="px-6 py-4 text-center text-gray-500">
@@ -448,7 +277,7 @@ def dashboard():
                     return;
                 }
 
-                filteredLogs.forEach(log => {
+                logs.forEach(log => {
                     const row = document.createElement('tr');
                     row.className = 'log-entry hover:bg-gray-50';
                     
@@ -795,9 +624,8 @@ def dashboard():
                         console.log('🔄 Reset response:', data);
                         
                         logs = [];
-                        filteredLogs = [];
                         renderLogs();
-                        fetchStats();
+                        updateStatsDisplay();
                         alert('✅ All logs have been reset successfully!');
                     } catch (error) {
                         console.error('❌ Error resetting logs:', error);
